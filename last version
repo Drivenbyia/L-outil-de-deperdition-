@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Calculateur de Consommation Énergétique</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <style>
+    :root {
+      --primary-color: #2ecc71;
+      --secondary-color: #27ae60;
+      --bg-dark: #1a1a1a;
+      --bg-card: #2d2d2d;
+      --text-color: #ffffff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark), #000);
+      color: var(--text-color);
+      margin: 0;
+      padding: 10px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-right: 10px;
+      border-radius: 8px 8px 0 0;
+      transition: background 0.3s;
+    }
+
+    .tab.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
+    .settings-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--primary-color);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .settings-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .settings-content {
+      background: var(--bg-card);
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .price-input {
+      margin-bottom: 15px;
+    }
+
+    .price-input label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      color: white;
+      margin: 8px 0;
+    }
+
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--secondary-color);
+    }
+
+    .result {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .info {
+      font-size: 0.9em;
+      color: #888;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .comparison-table th {
+      background: rgba(46, 204, 113, 0.2);
+      font-weight: bold;
+    }
+
+    .comparison-table tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <div id="tab3" class="tab-content">
+      <div class="card">
+        <h2>Configuration des prix</h2>
+        <div class="price-input">
+          <label>Prix Électricité (€/kWh)</label>
+          <input type="number" id="electricityPrice" value="0.25" step="0.01">
+        </div>
+        <div class="price-input">
+          <label>Prix Gaz (€/kWh)</label>
+          <input type="number" id="gasPrice" value="0.11" step="0.01">
+        </div>
+        <div class="price-input">
+          <label>Prix Fioul (€/L)</label>
+          <input type="number" id="fuelPrice" value="1.20" step="0.01">
+        </div>
+        <button onclick="saveSettings()">Sauvegarder</button>
+      </div>
+    </div>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('tab1')">Calculateur de Consommation</div>
+      <div class="tab" onclick="switchTab('tab2')">Déperdition du Logement</div>
+      <div class="tab" onclick="switchTab('tab3')">Configuration des Prix</div>
+    </div>
+
+    <div id="tab1" class="tab-content active">
+      <div class="card">
+        <h2>Système actuel</h2>
+        <select id="currentSystem" onchange="updateEnergyPrice()">
+          <option value="radiateur_electrique">Radiateur Électrique</option>
+          <option value="chaudiere_gaz">Chaudière Gaz</option>
+          <option value="chaudiere_fioul">Chaudière Fioul</option>
+        </select>
+
+        <div>
+          <label>Type de saisie</label>
+          <select id="inputType" onchange="toggleInputType()">
+            <option value="bill">Facture annuelle</option>
+            <option value="consumption">Consommation en kWh</option>
+          </select>
+        </div>
+
+        <div id="billInput">
+          <label>Facture annuelle (€)</label>
+          <input type="number" id="annualBill" onchange="calculateConsumption()">
+        </div>
+
+        <div id="consumptionInput" style="display: none;">
+          <label>Consommation (kWh)</label>
+          <input type="number" id="consumption">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Nouveau système</h2>
+        <select id="newSystem" onchange="updateNewSystemFields()">
+          <option value="pac_air_eau">Pompe à chaleur Air/Eau</option>
+          <option value="pac_air_air">Pompe à chaleur Air/Air</option>
+          <option value="chaudiere_gaz">Chaudière Gaz</option>
+        </select>
+
+        <div id="copField">
+          <label>COP</label>
+          <input type="number" id="cop" value="4" min="1" max="7" step="0.1">
+        </div>
+      </div>
+
+      <button onclick="calculate()">Calculer</button>
+
+      <div id="results" style="display: none;">
+        <div class="result" id="currentResult"></div>
+        <div class="result" id="newResult"></div>
+        <div class="result" id="savings"></div>
+        <div class="chart-container">
+          <canvas id="comparisonChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab2" class="tab-content">
+      <div class="card">
+        <h2>Calcul de la déperdition</h2>
+        <div>
+          <label>Surface habitable (m²)</label>
+          <input type="number" id="surface" placeholder="Ex: 100">
+        </div>
+        <div>
+          <label>Année de construction</label>
+          <select id="constructionYear" onchange="updateCoefficient()">
+            <option value="before1948">Avant 1948 (sans rénovation)</option>
+            <option value="1948-1974">1948 - 1974 (sans isolation)</option>
+            <option value="1974-1982">1974 - 1982 (RT 1974)</option>
+            <option value="1982-1988">1982 - 1988 (RT 1982)</option>
+            <option value="1988-2000">1988 - 2000 (RT 1988/2000)</option>
+            <option value="2000-2005">2000 - 2005 (RT 2000)</option>
+            <option value="2005-2012">2005 - 2012 (RT 2005)</option>
+            <option value="2012-2020">2012 - 2020 (RT 2012)</option>
+            <option value="after2020">Depuis 2020 (RE 2020)</option>
+          </select>
+        </div>
+        <div>
+          <label>Type d'isolation</label>
+          <select id="isolation" onchange="toggleCustomCoefficient()">
+            <option value="0.8">Isolation très performante (U = 0.8)</option>
+            <option value="1.2">Bonne isolation (U = 1.2)</option>
+            <option value="1.7">Isolation moyenne (U = 1.7)</option>
+            <option value="2.5">Isolation médiocre (U = 2.5)</option>
+            <option value="3.5">Absence d'isolation (U = 3.5)</option>
+            <option value="custom">Coefficient personnalisé</option>
+          </select>
+          <div id="customCoefficientField" style="display: none;">
+            <label>Coefficient de déperdition personnalisé (W/m²·K)</label>
+            <input type="number" id="customCoefficient" step="0.1" min="0.1" value="1.2" onchange="calculateHeatLoss()">
+          </div>
+        </div>
+        <div>
+          <label>Température de consigne (°C)</label>
+          <input type="number" id="temperature" value="19" min="16" max="24">
+        </div>
+        <div>
+          <label>Température extérieure de référence (°C)</label>
+          <input type="number" id="refTemperature" value="-7" min="-15" max="5">
+        </div>
+        <button onclick="calculateHeatLoss()">Calculer la déperdition</button>
+      </div>
+      <div class="result" id="heatLossResult"></div>
+      
+      <div class="card">
+        <h2>Dimensionnement équipement</h2>
+        <p>Puissance recommandée en fonction des déperditions :</p>
+        <div id="powerResult"></div>
+      </div>
+
+      <div class="card">
+        <h2>Analyse financière</h2>
+        <div>
+          <label>Coût d'installation (€)</label>
+          <input type="number" id="installationCost" placeholder="Ex: 12000">
+        </div>
+        <div>
+          <label>Aides financières (€)</label>
+          <input type="number" id="subsidies" placeholder="Ex: 4000">
+        </div>
+        <button onclick="calculateROI()">Calculer le retour sur investissement</button>
+        <div id="roiResult"></div>
+      </div>
+
+      <div class="card">
+        <h2>Comparaison des solutions</h2>
+        <div id="comparisonTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Prix par défaut
+    let energyPrices = {
+      electricity: 0.25,
+      gas: 0.11,
+      fuel: 1.20
+    };
+
+    function saveSettings() {
+      energyPrices.electricity = parseFloat(document.getElementById('electricityPrice').value);
+      energyPrices.gas = parseFloat(document.getElementById('gasPrice').value);
+      energyPrices.fuel = parseFloat(document.getElementById('fuelPrice').value);
+      updateEnergyPrice();
+      switchTab('tab1');
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    }
+
+    function toggleInputType() {
+      const inputType = document.getElementById('inputType').value;
+      document.getElementById('billInput').style.display = inputType === 'bill' ? 'block' : 'none';
+      document.getElementById('consumptionInput').style.display = inputType === 'consumption' ? 'block' : 'none';
+    }
+
+    function updateEnergyPrice() {
+      const system = document.getElementById('currentSystem').value;
+      const price = getEnergyPrice(system);
+      calculateConsumption();
+    }
+
+    function getEnergyPrice(system) {
+      switch(system) {
+        case 'radiateur_electrique': return energyPrices.electricity;
+        case 'chaudiere_gaz': return energyPrices.gas;
+        case 'chaudiere_fioul': return energyPrices.fuel;
+        default: return energyPrices.electricity;
+      }
+    }
+
+    function calculateConsumption() {
+      const system = document.getElementById('currentSystem').value;
+      const inputType = document.getElementById('inputType').value;
+      const bill = parseFloat(document.getElementById('annualBill').value) || 0;
+      const price = getEnergyPrice(system);
+
+      let consumption = 0;
+      if (inputType === 'bill') {
+        if (system === 'chaudiere_fioul') {
+          const liters = bill / price;
+          consumption = liters * 10;
+        } else {
+          consumption = bill / price;
+        }
+        document.getElementById('consumption').value = consumption.toFixed(2);
+      }
+    }
+
+    function calculateHeatLoss() {
+      const surface = parseFloat(document.getElementById('surface').value) || 0;
+      const year = document.getElementById('constructionYear').value;
+      const isolation = document.getElementById('isolation').value;
+      const temperature = parseFloat(document.getElementById('temperature').value) || 19;
+
+      let baseHeatLoss;
+      switch(year) {
+        case 'before1975': baseHeatLoss = 200; break;
+        case '1975-2000': baseHeatLoss = 150; break;
+        case 'after2000': baseHeatLoss = 100; break;
+      }
+
+      const isolationFactor = parseFloat(isolation);
+
+      const temperatureFactor = (temperature - 16) * 0.075 + 1;
+      // DJU moyen en France: 2400
+      const dju = 2400;
+      // 24h * coefficient de déperdition * surface * DJU / 1000 pour avoir en kWh/an
+      const totalHeatLoss = 24 * getIsolationFactor() * surface * dju / 1000;
+
+      document.getElementById('heatLossResult').innerHTML = `
+        <h3>Résultats</h3>
+        <p>Déperdition thermique estimée : ${totalHeatLoss.toFixed(0)} kWh/an</p>
+        <p>Soit environ ${(totalHeatLoss/surface).toFixed(0)} kWh/m²/an</p>
+      `;
+    }
+
+    function calculate() {
+      const currentSystem = document.getElementById('currentSystem').value;
+      const newSystem = document.getElementById('newSystem').value;
+      const inputType = document.getElementById('inputType').value;
+      const consumption = parseFloat(document.getElementById('consumption').value) || 0;
+      const cop = parseFloat(document.getElementById('cop').value) || 4;
+
+      const currentPrice = getEnergyPrice(currentSystem);
+      let currentCost = 0;
+
+      if (currentSystem === 'chaudiere_fioul') {
+        currentCost = (consumption / 10) * currentPrice;
+      } else {
+        currentCost = consumption * currentPrice;
+      }
+
+      let newConsumption = newSystem.includes('pac') ? consumption / cop : consumption;
+      const newPrice = newSystem === 'chaudiere_gaz' ? energyPrices.gas : energyPrices.electricity;
+      const newCost = newConsumption * newPrice;
+
+      const savings = currentCost - newCost;
+      const savingsPercent = ((savings / currentCost) * 100).toFixed(1);
+
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('currentResult').innerHTML = `
+        <h3>Système actuel</h3>
+        <p>Consommation: ${consumption.toFixed(2)} kWh</p>
+        <p>Coût annuel: ${currentCost.toFixed(2)} €</p>
+      `;
+      document.getElementById('newResult').innerHTML = `
+        <h3>Nouveau système</h3>
+        <p>Consommation: ${newConsumption.toFixed(2)} kWh</p>
+        <p>Coût annuel: ${newCost.toFixed(2)} €</p>
+      `;
+      document.getElementById('savings').innerHTML = `
+        <h3>Économies</h3>
+        <p>${savings.toFixed(2)} € par an (${savingsPercent}%)</p>
+      `;
+
+      createChart(currentCost, newCost, savings);
+    }
+
+    function updateCoefficient() {
+      const year = document.getElementById('constructionYear').value;
+      const coefficientMap = {
+        'before1948': 2.75,
+        '1948-1974': 2.25,
+        '1974-1982': 1.5,
+        '1982-1988': 1.1,
+        '1988-2000': 0.9,
+        '2000-2005': 0.7,
+        '2005-2012': 0.55,
+        '2012-2020': 0.4,
+        'after2020': 0.3
+      };
+      
+      document.getElementById('customCoefficient').value = coefficientMap[year];
+      calculateHeatLoss();
+    }
+
+    function toggleCustomCoefficient() {
+      const isolationType = document.getElementById('isolation').value;
+      document.getElementById('customCoefficientField').style.display = 
+        isolationType === 'custom' ? 'block' : 'none';
+    }
+
+    function getIsolationFactor() {
+      const isolationType = document.getElementById('isolation').value;
+      if (isolationType === 'custom') {
+        return parseFloat(document.getElementById('customCoefficient').value) || 1.2;
+      }
+      return parseFloat(isolationType);
+    }
+
+    function createChart(currentCost, newCost, savings) {
+      const ctx = document.getElementById('comparisonChart').getContext('2d');
+      
+      if (window.myChart) {
+        window.myChart.destroy();
+      }
+
+      window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Système actuel', 'Nouveau système', 'Économies'],
+          datasets: [{
+            data: [currentCost, newCost, savings],
+            backgroundColor: ['#e74c3c', '#2ecc71', '#3498db'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#fff'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#fff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function calculateROI() {
+      const installationCost = parseFloat(document.getElementById('installationCost').value) || 0;
+      const subsidies = parseFloat(document.getElementById('subsidies').value) || 0;
+      const annualSavings = parseFloat(document.getElementById('savings').innerText.split('€')[0]) || 0;
+      
+      const netCost = installationCost - subsidies;
+      const roi = netCost / annualSavings;
+
+      document.getElementById('roiResult').innerHTML = `
+        <h3>Analyse financière</h3>
+        <p>Coût net : ${netCost.toFixed(2)} €</p>
+        <p>Économies annuelles : ${annualSavings.toFixed(2)} €</p>
+        <p>Retour sur investissement : ${roi.toFixed(1)} ans</p>
+      `;
+    }
+
+    function updatePowerResult(heatLoss) {
+      const surface = parseFloat(document.getElementById('surface').value) || 0;
+      const temperature = parseFloat(document.getElementById('temperature').value) || 19;
+      const refTemperature = parseFloat(document.getElementById('refTemperature').value) || -7;
+      const hauteur = 2.5; // hauteur standard sous plafond
+      const volume = surface * hauteur;
+      
+      // Détermination du coefficient G selon l'isolation
+      let coefficientG;
+      const isolation = document.getElementById('isolation').value;
+      switch(isolation) {
+        case '0.8': coefficientG = 0.4; break; // Habitat bioclimatique
+        case '1.2': coefficientG = 0.6; break; // Très bonne isolation
+        case '1.7': coefficientG = 1.1; break; // Logement années 1990
+        case '2.5': coefficientG = 1.5; break; // Ancien avec isolation
+        case '3.5': coefficientG = 2.0; break; // Ancien sans isolation
+        default: coefficientG = getIsolationFactor() / 2; // Cas personnalisé
+      }
+      
+      // Calcul selon la norme : P = V × G × ΔT
+      const deltaT = temperature - refTemperature;
+      const rawPowerNeeded = volume * coefficientG * deltaT;
+      
+      // Selon DTU 65.16 : dimensionnement entre 80% et 120% pour PAC air/eau
+      const minPower = rawPowerNeeded * 0.8;
+      const maxPower = rawPowerNeeded * 1.2;
+
+      let recommendations = '';
+      recommendations = `PAC Air/Eau : entre ${(minPower/1000).toFixed(1)} et ${(maxPower/1000).toFixed(1)} kW à ${refTemperature}°C`;
+      
+      if (maxPower < 6000) {
+        recommendations += '\nPAC Air/Eau petit modèle recommandée';
+      } else if (maxPower < 9000) {
+        recommendations += '\nPAC Air/Eau modèle moyen recommandée';
+      } else {
+        recommendations += '\nPAC Air/Eau grande puissance recommandée';
+      }
+
+      document.getElementById('powerResult').innerHTML = `
+        <h3>Dimensionnement selon NF DTU 65.16</h3>
+        <p>Volume chauffé : ${volume.toFixed(0)} m³</p>
+        <p>Coefficient G : ${coefficientG.toFixed(2)} W/m³·°C</p>
+        <p>ΔT : ${deltaT}°C</p>
+        <p>Puissance recommandée : ${(minPower/1000).toFixed(1)} - ${(maxPower/1000).toFixed(1)} kW</p>
+        <p>Puissance spécifique : ${(minPower/surface).toFixed(0)} - ${(maxPower/surface).toFixed(0)} W/m²</p>
+      `;
+    }
+
+    function calculateHeatLoss() {
+      const surface = parseFloat(document.getElementById('surface').value) || 0;
+      const temperature = parseFloat(document.getElementById('temperature').value) || 19;
+      const dju = 2400; // DJU moyen en France
+
+      // Calcul des déperditions
+      const totalHeatLoss = 24 * getIsolationFactor() * surface * dju / 1000;
+
+      document.getElementById('heatLossResult').innerHTML = `
+        <h3>Résultats</h3>
+        <p>Déperdition thermique estimée : ${totalHeatLoss.toFixed(0)} kWh/an</p>
+        <p>Soit environ ${(totalHeatLoss/surface).toFixed(0)} kWh/m²/an</p>
+      `;
+
+      updatePowerResult(totalHeatLoss);
+      updateComparisonTable(totalHeatLoss);
+    }
+
+    function updateComparisonTable(heatLoss) {
+      const solutions = [
+        {name: 'PAC Air/Eau', cop: 4, efficiency: 0.95, cost: 12000, aids: 4000},
+        {name: 'PAC Air/Air', cop: 3.5, efficiency: 0.90, cost: 9000, aids: 3000},
+        {name: 'Chaudière gaz condensation', cop: 1, efficiency: 0.98, cost: 5000, aids: 1200},
+      ];
+
+      let tableHTML = `
+        <table class="comparison-table">
+          <tr>
+            <th>Solution</th>
+            <th>Consommation (kWh/an)</th>
+            <th>Coût annuel (€)</th>
+            <th>Investissement net (€)</th>
+            <th>ROI (ans)</th>
+          </tr>
+      `;
+
+      solutions.forEach(solution => {
+        const consumption = heatLoss / (solution.cop * solution.efficiency);
+        const annualCost = consumption * (solution.name.includes('PAC') ? energyPrices.electricity : energyPrices.gas);
+        const netInvestment = solution.cost - solution.aids;
+        const currentAnnualCost = parseFloat(document.getElementById('currentResult').innerText.split('€')[1]) || 0;
+        const savings = currentAnnualCost - annualCost;
+        const roi = netInvestment / savings;
+
+        tableHTML += `
+          <tr>
+            <td>${solution.name}</td>
+            <td>${consumption.toFixed(0)}</td>
+            <td>${annualCost.toFixed(0)} €</td>
+            <td>${netInvestment.toFixed(0)} €</td>
+            <td>${roi.toFixed(1)}</td>
+          </tr>
+        `;
+      });
+
+      tableHTML += '</table>';
+      document.getElementById('comparisonTable').innerHTML = tableHTML;
+    }
+
+    // Initialisation
+    updateEnergyPrice();
+    toggleInputType();
+  </script>
+</body>
+</html>
